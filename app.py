@@ -19,13 +19,6 @@ st.markdown("""
         text-shadow: 2px 2px 4px #000000;
         margin-bottom: 0px;
     }
-    .top-bar {
-        background-color: #1a1c24;
-        border: 2px solid #FFD700;
-        border-radius: 15px;
-        padding: 10px;
-        margin-bottom: 20px;
-    }
     [data-testid="stMetric"] {
         background-color: #1a1c24;
         border: 2px solid #333;
@@ -80,28 +73,53 @@ def update_dashboard():
         if not match.empty:
             all_cols = [c for c in df.columns if c != time_col]
             
-            # --- TOP BAR (TK and K) ---
-            # We identify columns that start with TK or K
-            top_teams = [c for c in all_cols if c.upper() in ["TK", "K"]]
-            other_teams = [c for c in all_cols if c.upper() not in ["TK", "K"]]
+            # --- DEFINE GROUPS ---
+            # Top: TK and K
+            row_top = [c for c in all_cols if c.upper() in ["TK", "K"]]
+            # Middle: 1st, 2nd, 3rd
+            row_mid = [c for c in all_cols if any(x in c.upper() for x in ["1ST", "2ND", "3RD"])]
+            # Bottom: 4th, 5th
+            row_bot = [c for c in all_cols if any(x in c.upper() for x in ["4TH", "5TH"])]
+            # Anything else (Specialists, etc.)
+            other_teams = [c for c in all_cols if c not in row_top and c not in row_mid and c not in row_bot]
 
-            if top_teams:
+            # --- RENDER ROW 1: TK & K ---
+            if row_top:
                 st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
-                # Create centered columns for the top bar
-                top_cols = st.columns(len(top_teams))
-                for i, team in enumerate(top_teams):
-                    with top_cols[i]:
+                cols1 = st.columns(len(row_top))
+                for i, team in enumerate(row_top):
+                    with cols1[i]:
                         val = str(match[team].values).strip("[]'\"")
                         if val.lower() in ['nan', 'none', '']: val = "---"
                         st.metric(label=f"⭐ {team}", value=val)
-                st.divider()
 
-            # --- GRID (REST OF THE TEAMS) ---
-            rows = [other_teams[i:i + 3] for i in range(0, len(other_teams), 3)]
-            for row in rows:
-                cols = st.columns(3)
-                for i, team in enumerate(row):
-                    with cols[i]:
+            # --- RENDER ROW 2: 1st, 2nd, 3rd ---
+            if row_mid:
+                st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
+                cols2 = st.columns(3) # Always 3 for balance
+                for i, team in enumerate(row_mid):
+                    with cols2[i]:
+                        val = str(match[team].values).strip("[]'\"")
+                        if val.lower() in ['nan', 'none', '']: val = "---"
+                        st.metric(label=team, value=val)
+
+            # --- RENDER ROW 3: 4th & 5th ---
+            if row_bot:
+                st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
+                # We use 2 columns to center these below the row of 3
+                cols3 = st.columns(2)
+                for i, team in enumerate(row_bot):
+                    with cols3[i]:
+                        val = str(match[team].values).strip("[]'\"")
+                        if val.lower() in ['nan', 'none', '']: val = "---"
+                        st.metric(label=team, value=val)
+
+            # --- RENDER ANY OTHERS ---
+            if other_teams:
+                st.divider()
+                cols_other = st.columns(len(other_teams))
+                for i, team in enumerate(other_teams):
+                    with cols_other[i]:
                         val = str(match[team].values).strip("[]'\"")
                         if val.lower() in ['nan', 'none', '']: val = "---"
                         st.metric(label=team, value=val)
