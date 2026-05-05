@@ -75,7 +75,7 @@ def update_dashboard():
     # --- LOAD DATA FROM GOOGLE SHEETS ---
     try:
         # Construct the Export URL for the specific day tab
-        url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={current_day}"
+        url = f"https://docs.google.com/spreadsheets/d/{1N3QLjiX4o8IwsDtGiJno-uQQ4ySijRXdy7Z7ec2kAdw}/gviz/tq?tqx=out:csv&sheet={current_day}"
         df = pd.read_csv(url).astype(object)
         df.columns = df.columns.str.strip()
     except Exception as e:
