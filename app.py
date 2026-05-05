@@ -4,7 +4,7 @@ from datetime import datetime
 import pytz
 
 # --- 1. PAGE CONFIGURATION ---
-st.set_page_config(page_title="Team Status Command Center", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="Phelan Falcons Live Schedule", layout="wide", initial_sidebar_state="collapsed")
 
 # --- 2. CUSTOM THEMING (CSS) ---
 st.markdown("""
@@ -14,20 +14,17 @@ st.markdown("""
         background-color: #0e1117;
     }
     h1 {
-        color: #00d4ff;
+        color: #FFD700; /* Gold color for Falcons theme */
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         text-align: center;
         padding-bottom: 0px;
-    }
-    .stSubheader {
-        text-align: center;
-        color: #888;
+        text-shadow: 2px 2px 4px #000000;
     }
     
     /* Style each Metric Card */
     [data-testid="stMetric"] {
         background-color: #1a1c24;
-        border: 1px solid #333;
+        border: 2px solid #333;
         padding: 20px;
         border-radius: 15px;
         box-shadow: 0 4px 6px rgba(0,0,0,0.3);
@@ -35,19 +32,19 @@ st.markdown("""
     }
     [data-testid="stMetric"]:hover {
         transform: translateY(-5px);
-        border-color: #00d4ff;
+        border-color: #FFD700; /* Glow gold on hover */
     }
     
     /* Label and Value styling */
     [data-testid="stMetricLabel"] {
-        color: #00d4ff !important;
-        font-size: 20px !important;
+        color: #FFD700 !important;
+        font-size: 22px !important;
         font-weight: bold !important;
         text-transform: uppercase;
     }
     [data-testid="stMetricValue"] {
         color: #ffffff !important;
-        font-size: 34px !important;
+        font-size: 36px !important;
     }
     
     /* Hide Streamlit branding */
@@ -62,6 +59,8 @@ def update_dashboard():
     local_tz = pytz.timezone('US/Pacific') 
     now = datetime.now(local_tz)
     current_day = now.strftime("%A")
+    
+    # Weekend Handling
     if current_day in ["Saturday", "Sunday"]:
         current_day = "Monday"
 
@@ -69,8 +68,8 @@ def update_dashboard():
     current_slot = now.replace(minute=rounded_minute, second=0, microsecond=0).strftime("%H:%M")
 
     # --- HEADER SECTION ---
-    st.markdown(f"<h1>TEAM STATUS COMMAND CENTER</h1>", unsafe_allow_html=True)
-    st.markdown(f"<p style='text-align: center; color: #888; font-size: 20px;'>{current_day} | {now.strftime('%I:%M:%S %p')} | Interval: {current_slot}</p>", unsafe_allow_html=True)
+    st.markdown(f"<h1>PHELAN FALCONS DAILY LIVE SCHEDULE</h1>", unsafe_allow_html=True)
+    st.markdown(f"<p style='text-align: center; color: #BBB; font-size: 20px;'>{current_day} | {now.strftime('%I:%M:%S %p')} | Current Slot: {current_slot}</p>", unsafe_allow_html=True)
     st.divider()
 
     # --- LOAD DATA ---
@@ -78,7 +77,7 @@ def update_dashboard():
         df = pd.read_excel("schedule.xlsx", sheet_name=current_day, engine='openpyxl').astype(object)
         df.columns = df.columns.str.strip()
     except Exception as e:
-        st.error(f"Error: Could not find sheet '{current_day}'")
+        st.error(f"Error: Could not find sheet '{current_day}' in schedule.xlsx")
         return
 
     time_column = next((col for col in df.columns if col.lower() == 'time'), None)
@@ -90,8 +89,7 @@ def update_dashboard():
         if not match.empty:
             teams = [c for c in df.columns if c != time_column]
             
-            # Use columns to create a "Grid"
-            # Adjust the number 3 or 4 based on how many cards you want per row
+            # Grid Logic: 3 cards per row
             rows = [teams[i:i + 3] for i in range(0, len(teams), 3)]
             
             for row in rows:
@@ -101,12 +99,12 @@ def update_dashboard():
                         raw_val = match[team].values
                         clean_text = str(raw_val).strip("[]'\"")
                         if clean_text.lower() in ['nan', 'none', '']:
-                            clean_text = "OFF DUTY"
+                            clean_text = "---"
                         
                         st.metric(label=team, value=clean_text)
         else:
-            st.info(f"System Standby: No specific activities scheduled for {current_slot}.")
+            st.info(f"No specific activities scheduled for the {current_slot} interval.")
     else:
-        st.error("Time column missing.")
+        st.error("Missing 'Time' column in the Excel sheet.")
 
 update_dashboard()
