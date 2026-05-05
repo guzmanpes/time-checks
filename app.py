@@ -16,28 +16,28 @@ st.markdown("""
         background-color: #0e1117;
     }
     h1 {
-        color: #FFD700; 
+        color: #1E90FF; /* DodgerBlue Heading */
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         text-align: center;
-        text-shadow: 2px 2px 4px #000000;
         margin-bottom: 0px;
         padding-bottom: 2px;
+        font-weight: bold;
     }
     /* 10% Reduced Compact Metric Styling */
     [data-testid="stMetric"] {
         background-color: #1a1c24;
         border: 1px solid #444;
-        padding: 8px 12px !important; /* Slightly tighter internal padding */
+        padding: 8px 12px !important; 
         border-radius: 10px;
-        margin-bottom: 8px !important; /* Balanced gap to prevent overlap */
+        margin-bottom: 8px !important; 
         display: flex;
         flex-direction: column;
         align-items: center;
         text-align: center;
-        min-height: 75px; /* The "Safe Zone" height */
+        min-height: 75px; 
     }
     [data-testid="stMetricLabel"] {
-        color: #FFD700 !important;
+        color: #FFD700 !important; /* Gold Grade Labels */
         font-size: 18px !important; 
         font-weight: bold !important;
         width: 100%;
@@ -77,9 +77,9 @@ def update_dashboard():
     current_slot = now.replace(minute=rounded_minute, second=0, microsecond=0).strftime("%H:%M")
 
     # --- HEADER ---
-    st.markdown(f"<h1>PHELAN FALCONS DAILY LIVE SCHEDULE</h1>", unsafe_allow_html=True)
+    st.markdown(f"<h1>PHELAN FALCONS LIVE DAILY SCHEDULE</h1>", unsafe_allow_html=True)
     
-    # Blue Subtitle
+    # Subtitle in Blue
     st.markdown(f"<p style='text-align: center; color: #1E90FF; font-size: 17px; font-weight: bold; margin-top: -5px; margin-bottom: 8px;'>{current_day} | {now.strftime('%I:%M:%S %p')} | Slot: {current_slot}</p>", unsafe_allow_html=True)
 
     # --- LOAD DATA FROM GOOGLE SHEETS ---
