@@ -21,20 +21,20 @@ st.markdown("""
         text-align: center;
         text-shadow: 2px 2px 4px #000000;
         margin-bottom: 0px;
-        padding-bottom: 5px;
+        padding-bottom: 2px;
     }
-    /* Fixed Compact Metric Styling */
+    /* 10% Reduced Compact Metric Styling */
     [data-testid="stMetric"] {
         background-color: #1a1c24;
         border: 1px solid #444;
-        padding: 10px 15px !important; 
+        padding: 8px 12px !important; /* Slightly tighter internal padding */
         border-radius: 10px;
-        margin-bottom: 10px !important; /* Increased to prevent overlap */
+        margin-bottom: 8px !important; /* Balanced gap to prevent overlap */
         display: flex;
         flex-direction: column;
         align-items: center;
         text-align: center;
-        min-height: 80px; /* Adjusted height to fit content safely */
+        min-height: 75px; /* The "Safe Zone" height */
     }
     [data-testid="stMetricLabel"] {
         color: #FFD700 !important;
@@ -42,21 +42,21 @@ st.markdown("""
         font-weight: bold !important;
         width: 100%;
         text-align: center;
-        line-height: 1.2 !important;
+        line-height: 1.1 !important;
     }
     [data-testid="stMetricValue"] {
         color: #ffffff !important;
         font-size: 28px !important; 
         width: 100%;
         text-align: center;
-        line-height: 1.2 !important;
+        line-height: 1.1 !important;
     }
-    /* Fixed the spacing between tier rows */
+    /* Controlled spacing between tiers */
     .stVerticalBlock {
-        gap: 1.0rem !important;
+        gap: 0.8rem !important;
     }
     .stHorizontalBlock {
-        gap: 0.5rem !important;
+        gap: 0.4rem !important;
     }
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
@@ -79,8 +79,8 @@ def update_dashboard():
     # --- HEADER ---
     st.markdown(f"<h1>PHELAN FALCONS DAILY LIVE SCHEDULE</h1>", unsafe_allow_html=True)
     
-    # Subtitle in Blue
-    st.markdown(f"<p style='text-align: center; color: #1E90FF; font-size: 18px; font-weight: bold; margin-top: -5px; margin-bottom: 10px;'>{current_day} | {now.strftime('%I:%M:%S %p')} | Slot: {current_slot}</p>", unsafe_allow_html=True)
+    # Blue Subtitle
+    st.markdown(f"<p style='text-align: center; color: #1E90FF; font-size: 17px; font-weight: bold; margin-top: -5px; margin-bottom: 8px;'>{current_day} | {now.strftime('%I:%M:%S %p')} | Slot: {current_slot}</p>", unsafe_allow_html=True)
 
     # --- LOAD DATA FROM GOOGLE SHEETS ---
     try:
@@ -88,7 +88,7 @@ def update_dashboard():
         df = pd.read_csv(url).astype(object)
         df.columns = df.columns.str.strip()
     except Exception as e:
-        st.error("Error connecting to Google Sheets. Verify Share settings.")
+        st.error("Error connecting to Google Sheets.")
         return
 
     time_col = next((col for col in df.columns if col.lower() == 'time'), None)
