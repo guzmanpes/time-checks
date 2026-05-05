@@ -75,14 +75,15 @@ def update_dashboard():
     if current_day in ["Saturday", "Sunday"]:
         current_day = "Monday"
 
+    # Hidden logic to match the 5-minute intervals in your Sheet
     rounded_minute = (now.minute // 5) * 5
     current_slot = now.replace(minute=rounded_minute, second=0, microsecond=0).strftime("%H:%M")
 
     # --- HEADER ---
     st.markdown(f"<h1>PHELAN FALCONS LIVE DAILY SCHEDULE</h1>", unsafe_allow_html=True)
     
-    # Subtitle in Blue
-    st.markdown(f"<p style='text-align: center; color: #1E90FF; font-size: 17px; font-weight: bold; margin-top: -5px; margin-bottom: 8px;'>{current_day} | {now.strftime('%I:%M:%S %p')} | Slot: {current_slot}</p>", unsafe_allow_html=True)
+    # Updated Subtitle: Removed 'Slot' display
+    st.markdown(f"<p style='text-align: center; color: #1E90FF; font-size: 17px; font-weight: bold; margin-top: -5px; margin-bottom: 8px;'>{current_day} | {now.strftime('%I:%M:%S %p')}</p>", unsafe_allow_html=True)
 
     # --- LOAD DATA FROM GOOGLE SHEETS ---
     try:
