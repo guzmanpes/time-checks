@@ -28,12 +28,12 @@ st.markdown("""
     }
     [data-testid="stMetricLabel"] {
         color: #FFD700 !important;
-        font-size: 20px !important;
+        font-size: 22px !important;
         font-weight: bold !important;
     }
     [data-testid="stMetricValue"] {
         color: #ffffff !important;
-        font-size: 32px !important;
+        font-size: 34px !important;
     }
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
@@ -74,13 +74,9 @@ def update_dashboard():
             all_cols = [c for c in df.columns if c != time_col]
             
             # --- DEFINE GROUPS ---
-            # Top: TK and K
             row_top = [c for c in all_cols if c.upper() in ["TK", "K"]]
-            # Middle: 1st, 2nd, 3rd
             row_mid = [c for c in all_cols if any(x in c.upper() for x in ["1ST", "2ND", "3RD"])]
-            # Bottom: 4th, 5th
             row_bot = [c for c in all_cols if any(x in c.upper() for x in ["4TH", "5TH"])]
-            # Anything else (Specialists, etc.)
             other_teams = [c for c in all_cols if c not in row_top and c not in row_mid and c not in row_bot]
 
             # --- RENDER ROW 1: TK & K ---
@@ -91,12 +87,12 @@ def update_dashboard():
                     with cols1[i]:
                         val = str(match[team].values).strip("[]'\"")
                         if val.lower() in ['nan', 'none', '']: val = "---"
-                        st.metric(label=f"⭐ {team}", value=val)
+                        st.metric(label=team, value=val)
 
             # --- RENDER ROW 2: 1st, 2nd, 3rd ---
             if row_mid:
                 st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
-                cols2 = st.columns(3) # Always 3 for balance
+                cols2 = st.columns(3)
                 for i, team in enumerate(row_mid):
                     with cols2[i]:
                         val = str(match[team].values).strip("[]'\"")
@@ -106,7 +102,6 @@ def update_dashboard():
             # --- RENDER ROW 3: 4th & 5th ---
             if row_bot:
                 st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
-                # We use 2 columns to center these below the row of 3
                 cols3 = st.columns(2)
                 for i, team in enumerate(row_bot):
                     with cols3[i]:
