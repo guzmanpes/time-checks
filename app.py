@@ -15,13 +15,15 @@ st.markdown("""
     .main {
         background-color: #0e1117;
     }
+    /* FORCED BLUE HEADING */
     h1 {
-        color: #1E90FF; /* DodgerBlue Heading */
+        color: #1E90FF !important; 
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         text-align: center;
         margin-bottom: 0px;
         padding-bottom: 2px;
         font-weight: bold;
+        text-shadow: 1px 1px 10px rgba(30, 144, 255, 0.3); /* Subtle Blue Glow */
     }
     /* 10% Reduced Compact Metric Styling */
     [data-testid="stMetric"] {
