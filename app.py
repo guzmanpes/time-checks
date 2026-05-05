@@ -21,41 +21,42 @@ st.markdown("""
         text-align: center;
         text-shadow: 2px 2px 4px #000000;
         margin-bottom: 0px;
-        padding-bottom: 0px;
+        padding-bottom: 5px;
     }
-    /* Ultra-Compact Metric Styling */
+    /* Fixed Compact Metric Styling */
     [data-testid="stMetric"] {
         background-color: #1a1c24;
         border: 1px solid #444;
-        padding: 4px 10px !important; 
-        border-radius: 8px;
-        margin-bottom: 2px !important;
+        padding: 10px 15px !important; 
+        border-radius: 10px;
+        margin-bottom: 10px !important; /* Increased to prevent overlap */
         display: flex;
         flex-direction: column;
         align-items: center;
         text-align: center;
-        min-height: 65px; 
+        min-height: 80px; /* Adjusted height to fit content safely */
     }
     [data-testid="stMetricLabel"] {
         color: #FFD700 !important;
-        font-size: 16px !important; 
+        font-size: 18px !important; 
         font-weight: bold !important;
         width: 100%;
         text-align: center;
-        line-height: 1.1 !important;
+        line-height: 1.2 !important;
     }
     [data-testid="stMetricValue"] {
         color: #ffffff !important;
-        font-size: 26px !important; 
+        font-size: 28px !important; 
         width: 100%;
         text-align: center;
-        line-height: 1.1 !important;
+        line-height: 1.2 !important;
     }
+    /* Fixed the spacing between tier rows */
     .stVerticalBlock {
-        gap: 0.2rem !important;
+        gap: 1.0rem !important;
     }
     .stHorizontalBlock {
-        gap: 0.3rem !important;
+        gap: 0.5rem !important;
     }
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
@@ -78,8 +79,8 @@ def update_dashboard():
     # --- HEADER ---
     st.markdown(f"<h1>PHELAN FALCONS DAILY LIVE SCHEDULE</h1>", unsafe_allow_html=True)
     
-    # Changed color to #1E90FF (Dodger Blue)
-    st.markdown(f"<p style='text-align: center; color: #1E90FF; font-size: 16px; font-weight: bold; margin-top: -5px; margin-bottom: 0px;'>{current_day} | {now.strftime('%I:%M:%S %p')} | Slot: {current_slot}</p>", unsafe_allow_html=True)
+    # Subtitle in Blue
+    st.markdown(f"<p style='text-align: center; color: #1E90FF; font-size: 18px; font-weight: bold; margin-top: -5px; margin-bottom: 10px;'>{current_day} | {now.strftime('%I:%M:%S %p')} | Slot: {current_slot}</p>", unsafe_allow_html=True)
 
     # --- LOAD DATA FROM GOOGLE SHEETS ---
     try:
@@ -87,7 +88,7 @@ def update_dashboard():
         df = pd.read_csv(url).astype(object)
         df.columns = df.columns.str.strip()
     except Exception as e:
-        st.error("Error connecting to Google Sheets.")
+        st.error("Error connecting to Google Sheets. Verify Share settings.")
         return
 
     time_col = next((col for col in df.columns if col.lower() == 'time'), None)
