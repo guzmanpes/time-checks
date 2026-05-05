@@ -12,53 +12,59 @@ SHEET_ID = "1N3QLjiX4o8IwsDtGiJno-uQQ4ySijRXdy7Z7ec2kAdw"
 # --- 3. CUSTOM THEMING (CSS) ---
 st.markdown("""
     <style>
+    /* REMOVE TOP PADDING FROM STREAMLIT PAGE */
+    .block-container {
+        padding-top: 1rem !important;
+        padding-bottom: 0rem !important;
+    }
     .main {
         background-color: #0e1117;
     }
-    /* FORCED BLUE HEADING */
+    /* SMALLER FORCED BLUE HEADING */
     h1 {
         color: #1E90FF !important; 
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         text-align: center;
-        margin-bottom: 0px;
-        padding-bottom: 2px;
+        margin-top: 0px !important;
+        margin-bottom: -5px !important; /* Pull subtitle up */
+        padding-bottom: 0px !important;
         font-weight: bold;
-        text-shadow: 1px 1px 10px rgba(30, 144, 255, 0.3); /* Subtle Blue Glow */
+        font-size: 1.8rem !important; /* Reduced from default size */
+        text-shadow: 1px 1px 8px rgba(30, 144, 255, 0.3);
     }
-    /* 10% Reduced Compact Metric Styling */
+    /* Ultra-Tight Metric Styling */
     [data-testid="stMetric"] {
         background-color: #1a1c24;
         border: 1px solid #444;
-        padding: 8px 12px !important; 
-        border-radius: 10px;
-        margin-bottom: 8px !important; 
+        padding: 5px 10px !important; 
+        border-radius: 8px;
+        margin-bottom: 4px !important; 
         display: flex;
         flex-direction: column;
         align-items: center;
         text-align: center;
-        min-height: 75px; 
+        min-height: 70px; 
     }
     [data-testid="stMetricLabel"] {
-        color: #FFD700 !important; /* Gold Grade Labels */
-        font-size: 18px !important; 
+        color: #FFD700 !important;
+        font-size: 17px !important; 
         font-weight: bold !important;
         width: 100%;
         text-align: center;
-        line-height: 1.1 !important;
+        line-height: 1.0 !important;
     }
     [data-testid="stMetricValue"] {
         color: #ffffff !important;
-        font-size: 28px !important; 
+        font-size: 26px !important; 
         width: 100%;
         text-align: center;
-        line-height: 1.1 !important;
+        line-height: 1.0 !important;
     }
-    /* Controlled spacing between tiers */
     .stVerticalBlock {
-        gap: 0.8rem !important;
+        gap: 0.3rem !important; 
     }
     .stHorizontalBlock {
-        gap: 0.4rem !important;
+        gap: 0.3rem !important;
     }
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
@@ -79,10 +85,11 @@ def update_dashboard():
     current_slot = now.replace(minute=rounded_minute, second=0, microsecond=0).strftime("%H:%M")
 
     # --- HEADER ---
+    # Main Heading
     st.markdown(f"<h1>PHELAN FALCONS LIVE DAILY SCHEDULE</h1>", unsafe_allow_html=True)
     
-    # Subtitle in Blue
-    st.markdown(f"<p style='text-align: center; color: #1E90FF; font-size: 17px; font-weight: bold; margin-top: -5px; margin-bottom: 8px;'>{current_day} | {now.strftime('%I:%M:%S %p')} | Slot: {current_slot}</p>", unsafe_allow_html=True)
+    # Ultra-tight Subtitle
+    st.markdown(f"<p style='text-align: center; color: #1E90FF; font-size: 15px; font-weight: bold; margin-top: 0px; margin-bottom: 5px;'>{current_day} | {now.strftime('%I:%M:%S %p')} | Slot: {current_slot}</p>", unsafe_allow_html=True)
 
     # --- LOAD DATA FROM GOOGLE SHEETS ---
     try:
@@ -102,7 +109,6 @@ def update_dashboard():
         if not match.empty:
             all_cols = [c for c in df.columns if c != time_col and "Unnamed" not in c]
             
-            # --- TIER LOGIC ---
             top_tier = [c for c in all_cols if c.upper() in ["TK", "K"]]
             mid_tier = [c for c in all_cols if any(x in c.upper() for x in ["1ST", "2ND", "3RD"])]
             bot_tier = [c for c in all_cols if any(x in c.upper() for x in ["4TH", "5TH"])]
@@ -118,8 +124,7 @@ def update_dashboard():
                             if val.lower() in ['nan', 'none', '']: val = "---"
                             st.metric(label=team, value=val)
 
-            # RENDER DASHBOARD
-            st.markdown("<div style='margin-top: 5px;'></div>", unsafe_allow_html=True)
+            st.markdown("<div style='margin-top: 2px;'></div>", unsafe_allow_html=True)
             render_row(top_tier)
             render_row(mid_tier)
             render_row(bot_tier)
