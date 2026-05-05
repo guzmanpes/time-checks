@@ -7,7 +7,7 @@ import pytz
 st.set_page_config(page_title="Phelan Falcons Live Schedule", layout="wide", initial_sidebar_state="collapsed")
 
 # --- 2. SETTINGS ---
-# Your Google Sheet ID must be inside quotation marks
+# Your specific Google Sheet ID
 SHEET_ID = "1N3QLjiX4o8IwsDtGiJno-uQQ4ySijRXdy7Z7ec2kAdw"
 
 # --- 3. CUSTOM THEMING (CSS) ---
@@ -36,14 +36,14 @@ st.markdown("""
     }
     [data-testid="stMetricLabel"] {
         color: #FFD700 !important;
-        font-size: 26px !important;
+        font-size: 24px !important;
         font-weight: bold !important;
         width: 100%;
         text-align: center;
     }
     [data-testid="stMetricValue"] {
         color: #ffffff !important;
-        font-size: 44px !important;
+        font-size: 38px !important;
         width: 100%;
         text-align: center;
     }
@@ -59,11 +59,9 @@ def update_dashboard():
     now = datetime.now(local_tz)
     current_day = now.strftime("%A")
     
-    # Weekend Handling
     if current_day in ["Saturday", "Sunday"]:
         current_day = "Monday"
 
-    # Rounds down to the nearest 5-minute mark
     rounded_minute = (now.minute // 5) * 5
     current_slot = now.replace(minute=rounded_minute, second=0, microsecond=0).strftime("%H:%M")
 
@@ -73,12 +71,11 @@ def update_dashboard():
 
     # --- LOAD DATA FROM GOOGLE SHEETS ---
     try:
-        # We use the SHEET_ID variable defined at the top
         url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={current_day}"
         df = pd.read_csv(url).astype(object)
         df.columns = df.columns.str.strip()
     except Exception as e:
-        st.error("Error connecting to Google Sheets. Check your Sheet ID and ensure 'Anyone with the link' can view.")
+        st.error("Error connecting to Google Sheets. Check ID and Share settings.")
         return
 
     time_col = next((col for col in df.columns if col.lower() == 'time'), None)
@@ -88,13 +85,31 @@ def update_dashboard():
         match = df[df[time_col].str.contains(current_slot, na=False)]
 
         if not match.empty:
-            teams = [c for c in df.columns if c != time_col and "Unnamed" not in c]
+            all_cols = [c for c in df.columns if c != time_col and "Unnamed" not in c]
+            
+            # --- TIER LOGIC ---
+            top_tier = [c for c in all_cols if c.upper() in ["TK", "K"]]
+            mid_tier = [c for c in all_cols if any(x in c.upper() for x in ["1ST", "2ND", "3RD"])]
+            bot_tier = [c for c in all_cols if any(x in c.upper() for x in ["4TH", "5TH"])]
+
+            # Helper function to render a row of metrics
+            def render_row(teams_list):
+                if teams_list:
+                    cols = st.columns(len(teams_list))
+                    for i, team in enumerate(teams_list):
+                        with cols[i]:
+                            val = str(match[team].values).strip("[]'\"")
+                            if val.lower() in ['nan', 'none', '']: val = "---"
+                            st.metric(label=team, value=val)
+
+            # RENDER TIERS
             st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
-            for team in teams:
-                val = str(match[team].values).strip("[]'\"")
-                if val.lower() in ['nan', 'none', '']: 
-                    val = "---"
-                st.metric(label=team, value=val)
+            render_row(top_tier)    # TK and K
+            st.markdown("<br>", unsafe_allow_html=True)
+            render_row(mid_tier)    # 1st, 2nd, 3rd
+            st.markdown("<br>", unsafe_allow_html=True)
+            render_row(bot_tier)    # 4th and 5th
+            
         else:
             st.info(f"No specific activities scheduled for the {current_slot} interval.")
     else:
