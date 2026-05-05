@@ -7,7 +7,7 @@ import pytz
 st.set_page_config(page_title="Phelan Falcons Live Schedule", layout="wide", initial_sidebar_state="collapsed")
 
 # --- 2. SETTINGS ---
-# Your specific Google Sheet ID
+# Your Google Sheet ID must be inside quotation marks
 SHEET_ID = "1N3QLjiX4o8IwsDtGiJno-uQQ4ySijRXdy7Z7ec2kAdw"
 
 # --- 3. CUSTOM THEMING (CSS) ---
@@ -23,7 +23,6 @@ st.markdown("""
         text-shadow: 2px 2px 4px #000000;
         margin-bottom: 5px;
     }
-    /* Vertical Stack Styling */
     [data-testid="stMetric"] {
         background-color: #1a1c24;
         border: 2px solid #333;
@@ -60,11 +59,11 @@ def update_dashboard():
     now = datetime.now(local_tz)
     current_day = now.strftime("%A")
     
-    # Weekend Handling: Default to Monday if viewed on Saturday/Sunday
+    # Weekend Handling
     if current_day in ["Saturday", "Sunday"]:
         current_day = "Monday"
 
-    # Rounds down to the nearest 5-minute mark (e.g., 10:34 -> 10:30)
+    # Rounds down to the nearest 5-minute mark
     rounded_minute = (now.minute // 5) * 5
     current_slot = now.replace(minute=rounded_minute, second=0, microsecond=0).strftime("%H:%M")
 
@@ -74,7 +73,7 @@ def update_dashboard():
 
     # --- LOAD DATA FROM GOOGLE SHEETS ---
     try:
-        # Construct the Export URL for the specific day tab
+        # We use the SHEET_ID variable defined at the top
         url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={current_day}"
         df = pd.read_csv(url).astype(object)
         df.columns = df.columns.str.strip()
@@ -82,26 +81,19 @@ def update_dashboard():
         st.error("Error connecting to Google Sheets. Check your Sheet ID and ensure 'Anyone with the link' can view.")
         return
 
-    # Find the 'Time' column (case-insensitive)
     time_col = next((col for col in df.columns if col.lower() == 'time'), None)
 
     if time_col:
         df[time_col] = df[time_col].astype(str)
-        # Match the current 5-minute slot
         match = df[df[time_col].str.contains(current_slot, na=False)]
 
         if not match.empty:
-            # Get all teams (excludes time and any system columns)
             teams = [c for c in df.columns if c != time_col and "Unnamed" not in c]
-            
             st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
-            
-            # Render every team vertically
             for team in teams:
                 val = str(match[team].values).strip("[]'\"")
                 if val.lower() in ['nan', 'none', '']: 
                     val = "---"
-                
                 st.metric(label=team, value=val)
         else:
             st.info(f"No specific activities scheduled for the {current_slot} interval.")
