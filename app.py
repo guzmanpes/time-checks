@@ -7,7 +7,6 @@ import pytz
 st.set_page_config(page_title="Phelan Falcons Live Schedule", layout="wide", initial_sidebar_state="collapsed")
 
 # --- 2. SETTINGS ---
-# Your specific Google Sheet ID
 SHEET_ID = "1N3QLjiX4o8IwsDtGiJno-uQQ4ySijRXdy7Z7ec2kAdw"
 
 # --- 3. CUSTOM THEMING (CSS) ---
@@ -21,38 +20,42 @@ st.markdown("""
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         text-align: center;
         text-shadow: 2px 2px 4px #000000;
-        margin-bottom: 2px;
+        margin-bottom: 0px;
+        padding-bottom: 0px;
     }
-    /* Vertical Stack Styling - Compact & Scaled */
+    /* Ultra-Compact Metric Styling */
     [data-testid="stMetric"] {
         background-color: #1a1c24;
-        border: 2px solid #333;
-        padding: 8px 15px; 
-        border-radius: 10px;
-        margin-bottom: 5px;
+        border: 1px solid #444;
+        padding: 4px 10px !important; 
+        border-radius: 8px;
+        margin-bottom: 2px !important;
         display: flex;
         flex-direction: column;
         align-items: center;
         text-align: center;
+        min-height: 65px; 
     }
     [data-testid="stMetricLabel"] {
         color: #FFD700 !important;
-        font-size: 20px !important;
+        font-size: 16px !important; 
         font-weight: bold !important;
         width: 100%;
         text-align: center;
-        line-height: 1.2;
+        line-height: 1.1 !important;
     }
     [data-testid="stMetricValue"] {
         color: #ffffff !important;
-        font-size: 32px !important;
+        font-size: 26px !important; 
         width: 100%;
         text-align: center;
-        line-height: 1.2;
+        line-height: 1.1 !important;
     }
-    /* Keep the vertical gap tight */
     .stVerticalBlock {
-        gap: 0.5rem !important;
+        gap: 0.2rem !important;
+    }
+    .stHorizontalBlock {
+        gap: 0.3rem !important;
     }
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
@@ -66,17 +69,17 @@ def update_dashboard():
     now = datetime.now(local_tz)
     current_day = now.strftime("%A")
     
-    # Weekend Handling: Defaults to Monday for testing on weekends
     if current_day in ["Saturday", "Sunday"]:
         current_day = "Monday"
 
-    # Rounds down to the nearest 5-minute mark for the Excel search
     rounded_minute = (now.minute // 5) * 5
     current_slot = now.replace(minute=rounded_minute, second=0, microsecond=0).strftime("%H:%M")
 
     # --- HEADER ---
     st.markdown(f"<h1>PHELAN FALCONS DAILY LIVE SCHEDULE</h1>", unsafe_allow_html=True)
-    st.markdown(f"<p style='text-align: center; color: #BBB; font-size: 18px; margin-top: -10px;'>{current_day} | {now.strftime('%I:%M:%S %p')} | Slot: {current_slot}</p>", unsafe_allow_html=True)
+    
+    # Changed color to #1E90FF (Dodger Blue)
+    st.markdown(f"<p style='text-align: center; color: #1E90FF; font-size: 16px; font-weight: bold; margin-top: -5px; margin-bottom: 0px;'>{current_day} | {now.strftime('%I:%M:%S %p')} | Slot: {current_slot}</p>", unsafe_allow_html=True)
 
     # --- LOAD DATA FROM GOOGLE SHEETS ---
     try:
@@ -84,25 +87,22 @@ def update_dashboard():
         df = pd.read_csv(url).astype(object)
         df.columns = df.columns.str.strip()
     except Exception as e:
-        st.error("Error connecting to Google Sheets. Ensure your Sheet ID is correct and shared as 'Anyone with the link can view'.")
+        st.error("Error connecting to Google Sheets.")
         return
 
     time_col = next((col for col in df.columns if col.lower() == 'time'), None)
 
     if time_col:
         df[time_col] = df[time_col].astype(str)
-        # Match current 5-minute block
         match = df[df[time_col].str.contains(current_slot, na=False)]
 
         if not match.empty:
             all_cols = [c for c in df.columns if c != time_col and "Unnamed" not in c]
             
-            # --- DYNAMIC TIER LOGIC ---
+            # --- TIER LOGIC ---
             top_tier = [c for c in all_cols if c.upper() in ["TK", "K"]]
             mid_tier = [c for c in all_cols if any(x in c.upper() for x in ["1ST", "2ND", "3RD"])]
             bot_tier = [c for c in all_cols if any(x in c.upper() for x in ["4TH", "5TH"])]
-            
-            # Automatically catch any new columns added later
             used_cols = top_tier + mid_tier + bot_tier
             other_tier = [c for c in all_cols if c not in used_cols]
 
@@ -115,17 +115,17 @@ def update_dashboard():
                             if val.lower() in ['nan', 'none', '']: val = "---"
                             st.metric(label=team, value=val)
 
-            # RENDER THE DASHBOARD LAYOUT
-            st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
-            render_row(top_tier)    # TK, K
-            render_row(mid_tier)    # 1st, 2nd, 3rd
-            render_row(bot_tier)    # 4th, 5th
-            render_row(other_tier)  # Any new columns added to Google Sheets
+            # RENDER DASHBOARD
+            st.markdown("<div style='margin-top: 5px;'></div>", unsafe_allow_html=True)
+            render_row(top_tier)
+            render_row(mid_tier)
+            render_row(bot_tier)
+            render_row(other_tier)
             
         else:
-            st.info(f"No specific activities scheduled for the {current_slot} interval.")
+            st.info(f"No activities scheduled for {current_slot}.")
     else:
-        st.error("Could not find a 'Time' column in your Google Sheet.")
+        st.error("Missing 'Time' column.")
 
-# --- 4. RUN THE APP ---
+# --- 4. RUN ---
 update_dashboard()
