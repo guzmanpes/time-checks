@@ -58,7 +58,7 @@ st.markdown("""
         gap: 0.8rem !important;
     }
     .stHorizontalBlock {
-        gap: 0.4rem !important;
+        gap: 0.3rem !important;
     }
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
@@ -71,6 +71,7 @@ def update_dashboard():
     local_tz = pytz.timezone('US/Pacific') 
     now = datetime.now(local_tz)
     current_day = now.strftime("%A")
+    current_date = now.strftime("%B %d, %Y") # Format: May 05, 2026
     
     if current_day in ["Saturday", "Sunday"]:
         current_day = "Monday"
@@ -82,8 +83,8 @@ def update_dashboard():
     # --- HEADER ---
     st.markdown(f"<h1>PHELAN FALCONS LIVE DAILY SCHEDULE</h1>", unsafe_allow_html=True)
     
-    # Updated Subtitle: Removed 'Slot' display
-    st.markdown(f"<p style='text-align: center; color: #1E90FF; font-size: 17px; font-weight: bold; margin-top: -5px; margin-bottom: 8px;'>{current_day} | {now.strftime('%I:%M:%S %p')}</p>", unsafe_allow_html=True)
+    # Updated Subtitle: Day, Date | Time
+    st.markdown(f"<p style='text-align: center; color: #1E90FF; font-size: 17px; font-weight: bold; margin-top: -5px; margin-bottom: 8px;'>{current_day}, {current_date} | {now.strftime('%I:%M:%S %p')}</p>", unsafe_allow_html=True)
 
     # --- LOAD DATA FROM GOOGLE SHEETS ---
     try:
