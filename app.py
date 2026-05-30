@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, date
+import numpy as np
 import pytz
 
 # --- 1. PAGE CONFIGURATION ---
@@ -9,13 +10,16 @@ st.set_page_config(page_title="Phelan Falcons Live Schedule", layout="wide", ini
 # --- 2. SETTINGS ---
 SHEET_ID = "1N3QLjiX4o8IwsDtGiJno-uQQ4ySijRXdy7Z7ec2kAdw"
 
+# 10-DAY CYCLE ANCHOR: Set this to a Monday you want to count as "Day 1"
+# Format: YYYY, MM, DD
+ANCHOR_DATE = date(2026, 6, 1) 
+
 # --- 3. CUSTOM THEMING (CSS) ---
 st.markdown("""
     <style>
     .main {
         background-color: #0e1117;
     }
-    /* FORCED BLUE HEADING */
     h1 {
         color: #1E90FF !important; 
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -25,7 +29,6 @@ st.markdown("""
         font-weight: bold;
         text-shadow: 1px 1px 10px rgba(30, 144, 255, 0.3);
     }
-    /* Balanced Compact Metric Styling */
     [data-testid="stMetric"] {
         background-color: #1a1c24;
         border: 1px solid #444;
@@ -53,46 +56,60 @@ st.markdown("""
         text-align: center;
         line-height: 1.1 !important;
     }
-    /* Controlled spacing between tiers */
-    .stVerticalBlock {
-        gap: 0.8rem !important;
-    }
-    .stHorizontalBlock {
-        gap: 0.3rem !important;
-    }
+    .stVerticalBlock { gap: 0.8rem !important; }
+    .stHorizontalBlock { gap: 0.4rem !important; }
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     </style>
     """, unsafe_allow_html=True)
+
+def get_current_rotation_day(today_date, anchor_date):
+    # Calculates network school days (Mon-Fri) between anchor and today
+    if today_date < anchor_date:
+        return "Day 1" # Fallback safety
+    
+    # Generate all days from anchor to today, filtering for weekdays
+    days = pd.date_range(start=anchor_date, end=today_date, freq='B')
+    total_school_days = len(days)
+    
+    # Calculate cycle position (1 to 10)
+    rotation_num = ((total_school_days - 1) % 10) + 1
+    return f"Day {rotation_num}"
 
 @st.fragment(run_every=5)
 def update_dashboard():
     # --- TIME LOGIC ---
     local_tz = pytz.timezone('US/Pacific') 
     now = datetime.now(local_tz)
-    current_day = now.strftime("%A")
-    current_date = now.strftime("%B %d, %Y") # Format: May 05, 2026
     
-    if current_day in ["Saturday", "Sunday"]:
-        current_day = "Monday"
+    current_date_str = now.strftime("%B %d, %Y")
+    current_day_of_week = now.strftime("%A")
+    
+    # Calculate 10-Day Rotation
+    current_sheet = get_current_rotation_day(now.date(), ANCHOR_DATE)
+    
+    # Weekend display management
+    if current_day_of_week in ["Saturday", "Sunday"]:
+        display_day = f"Weekend ({current_sheet} Next)"
+    else:
+        display_day = f"{current_day_of_week} ({current_sheet})"
 
-    # Hidden logic to match the 5-minute intervals in your Sheet
+    # Time tracking logic
     rounded_minute = (now.minute // 5) * 5
     current_slot = now.replace(minute=rounded_minute, second=0, microsecond=0).strftime("%H:%M")
 
     # --- HEADER ---
     st.markdown(f"<h1>PHELAN FALCONS LIVE DAILY SCHEDULE</h1>", unsafe_allow_html=True)
-    
-    # Updated Subtitle: Day, Date | Time
-    st.markdown(f"<p style='text-align: center; color: #1E90FF; font-size: 17px; font-weight: bold; margin-top: -5px; margin-bottom: 8px;'>{current_day}, {current_date} | {now.strftime('%I:%M:%S %p')}</p>", unsafe_allow_html=True)
+    st.markdown(f"<p style='text-align: center; color: #1E90FF; font-size: 17px; font-weight: bold; margin-top: -5px; margin-bottom: 8px;'>{display_day}, {current_date_str} | {now.strftime('%I:%M:%S %p')}</p>", unsafe_allow_html=True)
 
     # --- LOAD DATA FROM GOOGLE SHEETS ---
     try:
-        url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={current_day}"
+        # Pulls dynamic CSV target depending on calculated Day block
+        url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={current_sheet}"
         df = pd.read_csv(url).astype(object)
         df.columns = df.columns.str.strip()
     except Exception as e:
-        st.error("Error connecting to Google Sheets.")
+        st.error(f"Error connecting to Google Sheet tab target: '{current_sheet}'.")
         return
 
     time_col = next((col for col in df.columns if col.lower() == 'time'), None)
@@ -104,7 +121,6 @@ def update_dashboard():
         if not match.empty:
             all_cols = [c for c in df.columns if c != time_col and "Unnamed" not in c]
             
-            # --- TIER LOGIC ---
             top_tier = [c for c in all_cols if c.upper() in ["TK", "K"]]
             mid_tier = [c for c in all_cols if any(x in c.upper() for x in ["1ST", "2ND", "3RD"])]
             bot_tier = [c for c in all_cols if any(x in c.upper() for x in ["4TH", "5TH"])]
@@ -120,7 +136,6 @@ def update_dashboard():
                             if val.lower() in ['nan', 'none', '']: val = "---"
                             st.metric(label=team, value=val)
 
-            # RENDER DASHBOARD
             st.markdown("<div style='margin-top: 5px;'></div>", unsafe_allow_html=True)
             render_row(top_tier)
             render_row(mid_tier)
