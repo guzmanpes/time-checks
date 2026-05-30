@@ -12,7 +12,7 @@ SHEET_ID = "1N3QLjiX4o8IwsDtGiJno-uQQ4ySijRXdy7Z7ec2kAdw"
 
 # 10-DAY CYCLE ANCHOR: Set this to a Monday you want to count as "Day 1"
 # Format: YYYY, MM, DD
-ANCHOR_DATE = date(2026, 6, 1) 
+ANCHOR_DATE = date(2026, 5, 25) 
 
 # --- 3. CUSTOM THEMING (CSS) ---
 st.markdown("""
