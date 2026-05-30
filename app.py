@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime, date
-import numpy as np
 import pytz
 
 # --- 1. PAGE CONFIGURATION ---
@@ -10,8 +9,7 @@ st.set_page_config(page_title="Phelan Falcons Live Schedule", layout="wide", ini
 # --- 2. SETTINGS ---
 SHEET_ID = "1N3QLjiX4o8IwsDtGiJno-uQQ4ySijRXdy7Z7ec2kAdw"
 
-# 10-DAY CYCLE ANCHOR: Set this to a Monday you want to count as "Day 1"
-# Format: YYYY, MM, DD
+# Updated to past Monday so it calculates safely for today
 ANCHOR_DATE = date(2026, 5, 25) 
 
 # --- 3. CUSTOM THEMING (CSS) ---
@@ -64,15 +62,10 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 def get_current_rotation_day(today_date, anchor_date):
-    # Calculates network school days (Mon-Fri) between anchor and today
     if today_date < anchor_date:
-        return "Day 1" # Fallback safety
-    
-    # Generate all days from anchor to today, filtering for weekdays
+        return "Day 1"
     days = pd.date_range(start=anchor_date, end=today_date, freq='B')
     total_school_days = len(days)
-    
-    # Calculate cycle position (1 to 10)
     rotation_num = ((total_school_days - 1) % 10) + 1
     return f"Day {rotation_num}"
 
@@ -85,16 +78,13 @@ def update_dashboard():
     current_date_str = now.strftime("%B %d, %Y")
     current_day_of_week = now.strftime("%A")
     
-    # Calculate 10-Day Rotation
     current_sheet = get_current_rotation_day(now.date(), ANCHOR_DATE)
     
-    # Weekend display management
     if current_day_of_week in ["Saturday", "Sunday"]:
         display_day = f"Weekend ({current_sheet} Next)"
     else:
         display_day = f"{current_day_of_week} ({current_sheet})"
 
-    # Time tracking logic
     rounded_minute = (now.minute // 5) * 5
     current_slot = now.replace(minute=rounded_minute, second=0, microsecond=0).strftime("%H:%M")
 
@@ -104,18 +94,19 @@ def update_dashboard():
 
     # --- LOAD DATA FROM GOOGLE SHEETS ---
     try:
-        # Pulls dynamic CSV target depending on calculated Day block
-        url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={current_sheet}"
+        # URL-encoded sheet target to handle spaces safely
+        safe_sheet_name = current_sheet.replace(" ", "%20")
+        url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={safe_sheet_name}"
         df = pd.read_csv(url).astype(object)
         df.columns = df.columns.str.strip()
     except Exception as e:
-        st.error(f"Error connecting to Google Sheet tab target: '{current_sheet}'.")
+        st.error(f"Error connecting to Google Sheet tab target: '{current_sheet}'. Verify share settings or tab name structure.")
         return
 
     time_col = next((col for col in df.columns if col.lower() == 'time'), None)
 
     if time_col:
-        df[time_col] = df[time_col].astype(str)
+        df[time_col] = df[time_col].astype(str).str.strip()
         match = df[df[time_col].str.contains(current_slot, na=False)]
 
         if not match.empty:
